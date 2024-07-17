@@ -16,9 +16,9 @@ type Handler struct {
 	apiRepository database.Repository
 }
 
-func NewApiHandler(todoRepository database.Repository) *Handler {
+func NewApiHandler(Repository database.Repository) *Handler {
 	return &Handler{
-		apiRepository: todoRepository,
+		apiRepository: Repository,
 	}
 }
 func (h *Handler) CreatePatient(ctx *fiber.Ctx) error {
@@ -80,7 +80,16 @@ func (h *Handler) ReadPatient(ctx *fiber.Ctx) error {
 func (h *Handler) ReadPatientAll(ctx *fiber.Ctx) error {
 	data, err := h.apiRepository.ReadPatientAll(ctx.Context())
 	if err != nil {
+		log.Printf("ReadPatientAll error: %v", err)
 		return models.Response(constants.StatusCodeSystemError, nil, constants.StatusCodeSystemErrorMessage).SendResponse(ctx, http.StatusInternalServerError)
 	}
 	return models.ResponseSuccess(constants.StatusCodeSuccess, constants.SuccessMessage, data).SendResponseSuccess(ctx, http.StatusOK)
 }
+
+// func (h *Handler) ReadPatientAll(ctx *fiber.Ctx) error {
+// 	data, err := h.apiRepository.ReadPatientAll(ctx.Context())
+// 	if err != nil {
+// 		return models.Response(constants.StatusCodeSystemError, nil, constants.StatusCodeSystemErrorMessage).SendResponse(ctx, http.StatusInternalServerError)
+// 	}
+// 	return models.ResponseSuccess(constants.StatusCodeSuccess, constants.SuccessMessage, data).SendResponseSuccess(ctx, http.StatusOK)
+// }

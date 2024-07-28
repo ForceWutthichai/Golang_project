@@ -24,14 +24,19 @@ type UpdatePatientRequest struct {
 }
 
 type ResponseReadPatient struct {
-	Id        int    `json:"id" validate:"required"`
+	Id        int            `json:"id" validate:"required"`
+	FirstName string         `json:"first_name" validate:"required"`
+	LastName  string         `json:"last_name" validate:"required"`
+	Address   string         `json:"address" validate:"required"`
+	Phone     sql.NullString `json:"phone" validate:"required"`
+	Gender    string         `json:"gender" validate:"required"`
+	IdCard    string         `json:"id_card" validate:"required"`
+	DateBirth string         `json:"date_birth" validate:"required"`
+}
+
+type ReadPatientRequest struct {
 	FirstName string `json:"first_name" validate:"required"`
 	LastName  string `json:"last_name" validate:"required"`
-	Address   string `json:"address" validate:"required"`
-	Phone     string `json:"phone" validate:"required"`
-	Gender    string `json:"gender" validate:"required"`
-	IdCard    string `json:"id_card" validate:"required"`
-	DateBirth string `json:"date_birth" validate:"required"`
 }
 
 type ResponseReadPatientAll struct {

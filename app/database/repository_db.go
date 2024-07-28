@@ -2,7 +2,7 @@ package database //เชื่อม database
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"todo/models"
 
@@ -13,7 +13,7 @@ import (
 type Repository interface {
 	CreatePatient(ctx context.Context, createPatientRequest *models.CreatePatientRequest) error
 	UpdatePatient(ctx context.Context, updatePatientRequest *models.UpdatePatientRequest) error
-	ReadPatient(ctx context.Context, req *models.ResponseReadPatient) (*[]models.ResponseReadPatient, error)
+	ReadPatient(ctx context.Context, req *models.ReadPatientRequest) (*[]models.ResponseReadPatient, error)
 	ReadPatientAll(ctx context.Context) (*[]models.ResponseReadPatientAll, error)
 }
 
@@ -87,33 +87,23 @@ func (r *RepositoryDB) UpdatePatient(ctx context.Context, editPatientRequest *mo
 	return err
 }
 
-func (r *RepositoryDB) ReadPatient(ctx context.Context, req *models.ResponseReadPatient) (*[]models.ResponseReadPatient, error) {
+func (r *RepositoryDB) ReadPatient(ctx context.Context, req *models.ReadPatientRequest) (*[]models.ResponseReadPatient, error) {
 	query := `SELECT p.id, p.first_name, p.last_name, p.address, p.phone, p.gender, p.id_card, p.date_birth FROM patient p WHERE 1=1`
+	args := []interface{}{}
+	argIndex := 1
 
-	// Add other optional query parameters here
 	if req.FirstName != "" {
-		query += " AND p.first_name = @first_name" + fmt.Sprint(*&req.FirstName)
+		query += " AND p.first_name = $" + strconv.Itoa(argIndex)
+		args = append(args, req.FirstName)
+		argIndex++
 	}
 	if req.LastName != "" {
-		query += " AND p.last_name = @last_name" + fmt.Sprint(*&req.LastName)
-	}
-	if req.Address != "" {
-		query += " AND p.address = @address" + fmt.Sprint(*&req.Address)
-	}
-	if req.Phone != "" {
-		query += " AND p.phone = @phone" + fmt.Sprint(*&req.Phone)
-	}
-	if req.Gender != "" {
-		query += " AND p.gender = @gender" + fmt.Sprint(*&req.Gender)
-	}
-	if req.IdCard != "" {
-		query += " AND p.id_card = @id_card" + fmt.Sprint(*&req.IdCard)
-	}
-	if req.DateBirth != "" {
-		query += " AND p.date_birth = @date_birth" + fmt.Sprint(*&req.DateBirth)
+		query += " AND p.last_name = $" + strconv.Itoa(argIndex)
+		args = append(args, req.LastName)
+		argIndex++
 	}
 
-	rows, err := r.pool.Query(ctx, query)
+	rows, err := r.pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +112,17 @@ func (r *RepositoryDB) ReadPatient(ctx context.Context, req *models.ResponseRead
 	var patients []models.ResponseReadPatient
 	for rows.Next() {
 		var patient models.ResponseReadPatient
-		if err := rows.Scan(&patient.Id, &patient.FirstName, &patient.LastName, &patient.Address, &patient.Phone, &patient.Gender, &patient.IdCard, &patient.DateBirth); err != nil {
+		err := rows.Scan(
+			&patient.Id,
+			&patient.FirstName,
+			&patient.LastName,
+			&patient.Address,
+			&patient.Phone,
+			&patient.Gender,
+			&patient.IdCard,
+			&patient.DateBirth,
+		)
+		if err != nil {
 			return nil, err
 		}
 		patients = append(patients, patient)

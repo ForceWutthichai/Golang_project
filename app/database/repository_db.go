@@ -40,16 +40,31 @@ func (r *RepositoryDB) CreatePatient(ctx context.Context, createPatientRequest *
 		}
 	}()
 
-	stmt := `INSERT INTO patient (first_name, last_name, address,phone, gender, id_card, date_birth) 
-	VALUES(@first_name, @last_name, @address,@phone, @gender, @id_card, @date_birth);`
+	stmt := `INSERT INTO patient (
+		first_name, last_name, id_card, phone, gender, 
+		house_number, street, village, subdistrict, district, province,
+		weight, height, waist, password
+	) VALUES (
+		@first_name, @last_name, @id_card, @phone, @gender, @house_number, @street, @village, @subdistrict, @district, @province,
+		@weight, @height, @waist, @password
+	);`
+
 	args := pgx.NamedArgs{
-		"first_name": createPatientRequest.FirstName,
-		"last_name":  createPatientRequest.LastName,
-		"address":    createPatientRequest.Address,
-		"phone":      createPatientRequest.Phone,
-		"gender":     createPatientRequest.Gender,
-		"id_card":    createPatientRequest.IdCard,
-		"date_birth": createPatientRequest.DateBirth,
+		"first_name":   createPatientRequest.FirstName,
+		"last_name":    createPatientRequest.LastName,
+		"id_card":      createPatientRequest.IdCard,
+		"phone":        createPatientRequest.Phone,
+		"gender":       createPatientRequest.Gender,
+		"house_number": createPatientRequest.HouseNumber,
+		"street":       createPatientRequest.Street,
+		"village":      createPatientRequest.Village,
+		"subdistrict":  createPatientRequest.Subdistrict,
+		"district":     createPatientRequest.District,
+		"province":     createPatientRequest.Province,
+		"weight":       createPatientRequest.Weight,
+		"height":       createPatientRequest.Height,
+		"waist":        createPatientRequest.Waist,
+		"password":     createPatientRequest.Password,
 	}
 
 	_, err = tx.Exec(ctx, stmt, args)

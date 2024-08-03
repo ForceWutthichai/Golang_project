@@ -15,6 +15,7 @@ type Repository interface {
 	UpdatePatient(ctx context.Context, updatePatientRequest *models.UpdatePatientRequest) error
 	ReadPatient(ctx context.Context, req *models.ReadPatientRequest) (*[]models.ResponseReadPatient, error)
 	ReadPatientAll(ctx context.Context) (*[]models.ResponseReadPatientAll, error)
+	ReadPatientSubmit(ctx context.Context, submittedBy string) (*[]models.ResponseReadPatientSubmit, error)
 }
 
 type RepositoryDB struct {
@@ -41,20 +42,22 @@ func (r *RepositoryDB) CreatePatient(ctx context.Context, createPatientRequest *
 	}()
 
 	stmt := `INSERT INTO patient (
-		first_name, last_name, id_card, phone, gender, 
+		title_name,first_name, last_name, id_card, phone, gender,date_birth,
 		house_number, street, village, subdistrict, district, province,
 		weight, height, waist, password
 	) VALUES (
-		@first_name, @last_name, @id_card, @phone, @gender, @house_number, @street, @village, @subdistrict, @district, @province,
+		@title_name,@first_name, @last_name, @id_card, @phone, @gender,@date_birth, @house_number, @street, @village, @subdistrict, @district, @province,
 		@weight, @height, @waist, @password
 	);`
 
 	args := pgx.NamedArgs{
+		"title_name":   createPatientRequest.TitleName,
 		"first_name":   createPatientRequest.FirstName,
 		"last_name":    createPatientRequest.LastName,
 		"id_card":      createPatientRequest.IdCard,
 		"phone":        createPatientRequest.Phone,
 		"gender":       createPatientRequest.Gender,
+		"date_birth":   createPatientRequest.DateBirth,
 		"house_number": createPatientRequest.HouseNumber,
 		"street":       createPatientRequest.Street,
 		"village":      createPatientRequest.Village,
@@ -155,7 +158,8 @@ func (r *RepositoryDB) ReadPatient(ctx context.Context, req *models.ReadPatientR
 }
 
 func (r *RepositoryDB) ReadPatientAll(ctx context.Context) (*[]models.ResponseReadPatientAll, error) {
-	query := `SELECT p.id, p.first_name, p.last_name, p.address, p.phone, p.gender, p.id_card, p.date_birth FROM patient p; `
+	query := `SELECT p.id,p.first_name,p.last_name,p.id_card,p.phone,p.gender,p.house_number,p.street,p.village,p.subdistrict,p.district,p.province,p.weight,p.height,p.waist,p."password" 
+			FROM patient p  `
 
 	rows, err := r.pool.Query(ctx, query)
 	if err != nil {
@@ -170,11 +174,19 @@ func (r *RepositoryDB) ReadPatientAll(ctx context.Context) (*[]models.ResponseRe
 			&responseReadPatient.Id,
 			&responseReadPatient.FirstName,
 			&responseReadPatient.LastName,
-			&responseReadPatient.Address,
+			&responseReadPatient.IdCard,
 			&responseReadPatient.Phone,
 			&responseReadPatient.Gender,
-			&responseReadPatient.IdCard,
-			&responseReadPatient.DateBirth,
+			&responseReadPatient.HouseNumber,
+			&responseReadPatient.Street,
+			&responseReadPatient.Village,
+			&responseReadPatient.Subdistrict,
+			&responseReadPatient.District,
+			&responseReadPatient.Province,
+			&responseReadPatient.Weight,
+			&responseReadPatient.Height,
+			&responseReadPatient.Waist,
+			&responseReadPatient.Password,
 		)
 		if err != nil {
 			return nil, err
@@ -187,6 +199,54 @@ func (r *RepositoryDB) ReadPatientAll(ctx context.Context) (*[]models.ResponseRe
 	}
 	if len(responseReadPatientList) == 0 {
 		return &[]models.ResponseReadPatientAll{}, nil
+	}
+
+	return &responseReadPatientList, nil
+}
+
+func (r *RepositoryDB) ReadPatientSubmit(ctx context.Context, submittedBy string) (*[]models.ResponseReadPatientSubmit, error) {
+	query := `SELECT id, first_name, last_name, id_card, phone, gender, house_number, street, village, subdistrict, district, province, weight, height, waist, password 
+              FROM patient 
+              WHERE submitted_by = $1`
+
+	rows, err := r.pool.Query(ctx, query, submittedBy)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var responseReadPatientList []models.ResponseReadPatientSubmit
+	for rows.Next() {
+		var responseReadPatient models.ResponseReadPatientSubmit
+		err := rows.Scan(
+			&responseReadPatient.Id,
+			&responseReadPatient.FirstName,
+			&responseReadPatient.LastName,
+			&responseReadPatient.IdCard,
+			&responseReadPatient.Phone,
+			&responseReadPatient.Gender,
+			&responseReadPatient.HouseNumber,
+			&responseReadPatient.Street,
+			&responseReadPatient.Village,
+			&responseReadPatient.Subdistrict,
+			&responseReadPatient.District,
+			&responseReadPatient.Province,
+			&responseReadPatient.Weight,
+			&responseReadPatient.Height,
+			&responseReadPatient.Waist,
+			&responseReadPatient.Password,
+		)
+		if err != nil {
+			return nil, err
+		}
+		responseReadPatientList = append(responseReadPatientList, responseReadPatient)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(responseReadPatientList) == 0 {
+		return &[]models.ResponseReadPatientSubmit{}, nil
 	}
 
 	return &responseReadPatientList, nil

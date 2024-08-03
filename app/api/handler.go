@@ -21,6 +21,7 @@ func NewApiHandler(Repository database.Repository) *Handler {
 		apiRepository: Repository,
 	}
 }
+
 func (h *Handler) CreatePatient(ctx *fiber.Ctx) error {
 	request := new(models.CreatePatientRequest)
 	if err := ctx.BodyParser(&request); err != nil {

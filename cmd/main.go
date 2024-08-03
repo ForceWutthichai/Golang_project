@@ -44,11 +44,12 @@ func main() {
 	})
 
 	apiHandler := api.NewApiHandler(database.NewRepositoryDB(postgresClient))
+
 	app.Post("/create-patient", apiHandler.CreatePatient)
 	app.Put("/update-patient", apiHandler.UpdatePatient)
 	app.Post("/read-patient", apiHandler.ReadPatient)
 	app.Get("/readpatientall", apiHandler.ReadPatientAll)
-
+	app.Get("/readpatientSubmit", apiHandler.ReadPatientAll)
 	healthCheck(app, postgresClient)
 
 	log.Printf("Listening on port: %s", cfg.Server.Port)

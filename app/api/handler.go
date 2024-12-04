@@ -16,11 +16,12 @@ type Handler struct {
 	apiRepository database.Repository
 }
 
-func NewApiHandler(todoRepository database.Repository) *Handler {
+func NewApiHandler(Repository database.Repository) *Handler {
 	return &Handler{
-		apiRepository: todoRepository,
+		apiRepository: Repository,
 	}
 }
+
 func (h *Handler) CreatePatient(ctx *fiber.Ctx) error {
 	request := new(models.CreatePatientRequest)
 	if err := ctx.BodyParser(&request); err != nil {
@@ -61,7 +62,7 @@ func (h *Handler) UpdatePatient(ctx *fiber.Ctx) error {
 }
 
 func (h *Handler) ReadPatient(ctx *fiber.Ctx) error {
-	request := new(models.ResponseReadPatient)
+	request := new(models.ReadPatientRequest)
 	if err := ctx.BodyParser(&request); err != nil {
 		return models.Response(constants.StatusCodeBadRequest, constants.BadRequestMessage, err.Error()).SendResponse(ctx, http.StatusBadRequest)
 	}
@@ -80,6 +81,7 @@ func (h *Handler) ReadPatient(ctx *fiber.Ctx) error {
 func (h *Handler) ReadPatientAll(ctx *fiber.Ctx) error {
 	data, err := h.apiRepository.ReadPatientAll(ctx.Context())
 	if err != nil {
+		log.Printf("ReadPatientAll error: %v", err)
 		return models.Response(constants.StatusCodeSystemError, nil, constants.StatusCodeSystemErrorMessage).SendResponse(ctx, http.StatusInternalServerError)
 	}
 	return models.ResponseSuccess(constants.StatusCodeSuccess, constants.SuccessMessage, data).SendResponseSuccess(ctx, http.StatusOK)
